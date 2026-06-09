@@ -61,16 +61,16 @@ class SetupCog(commands.Cog):
                 changes.append(f"Created category `{cat_name}`")
             await cat.edit(position=idx)
 
-            for ch_name, ch_type, opts in channels:
-                lookup = ch_name.lower()
+            for cname, chtype, copts in channels:
+                lookup = cname.lower()
                 matches = [c for c in cat.channels if c.name.lower() == lookup]
                 if len(matches) > 1:
                     for c in matches[1:]:
                         await c.delete(reason="Vexa duplicate cleanup")
-                    changes.append(f"Cleaned duplicate channel `{ch_name}`")
+                    changes.append(f"Cleaned duplicate channel `{cname}`")
                     matches = [matches[0]]
 
-                p = self._channel_perms(guild, role_map, opts)
+                p = self._channel_perms(guild, role_map, copts)
                 if matches:
                     ch = matches[0]
                     try:
@@ -78,21 +78,18 @@ class SetupCog(commands.Cog):
                     except:
                         pass
                 else:
-                    if ch_type == "voice":
+                    if chtype == "voice":
                         ch = await guild.create_voice_channel(
-                            ch_name, category=cat, overwrites=p, reason="Vexa setup"
+                            cname, category=cat, overwrites=p, reason="Vexa setup"
                         )
                     else:
                         ch = await guild.create_text_channel(
-                            ch_name, category=cat, overwrites=p, reason="Vexa setup"
+                            cname, category=cat, overwrites=p, reason="Vexa setup"
                         )
-                    changes.append(f"Created channel `{ch_name}`")
+                    changes.append(f"Created channel `{cname}`")
                     # Store channel ID in guild_settings
-                    key = f"ch_{ch_name.lower().replace(' ', '_').replace('・', '_')}"
+                    key = f"ch_{cname.lower().replace(' ', '_').replace('・', '_')}"
                     await GuildSettings.set(key, ch.id)
-
-        # ── Seed static embeds ─────────────────────────────────
-        await self._seed_content(guild)
 
         # Log to bot-logs
         log_ch = discord.utils.get(guild.text_channels, name=ch_name("⚙️・bot-logs"))
@@ -116,25 +113,24 @@ class SetupCog(commands.Cog):
 
     async def _seed_content(self, guild: discord.Guild, force: bool = False):
         from bot.embeds import rules_embed, pricing_embed
-        tasks = []
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("📌・rules"))
         if ch:
             if force:
                 await EmbedTracker.refresh("rules", guild, ch_name("📌・rules"))
             if not await EmbedTracker.get("rules"):
-                tasks.append(self._send_once(ch, "rules", rules_embed()))
+                await self._send_once(ch, "rules", rules_embed())
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("📢・announcements"))
         if ch:
             if force:
                 await EmbedTracker.refresh("announcement", guild, ch_name("📢・announcements"))
             if not await EmbedTracker.get("announcement"):
-                tasks.append(self._send_once(ch, "announcement", announcement_embed(
+                await self._send_once(ch, "announcement", announcement_embed(
                     "🚀 Vexa is Live!",
                     "Server is fully operational.\n• `/shop` — browse bots\n• `#🎫・create-ticket` — support\n• `/referral` — earn rewards",
                     "Vexa System"
-                )))
+                ))
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("💰・pricing"))
         if ch:
@@ -143,10 +139,7 @@ class SetupCog(commands.Cog):
             if not await EmbedTracker.get("pricing"):
                 prods = await ProductModel.get_all()
                 if prods:
-                    tasks.append(self._send_once(ch, "pricing", pricing_embed(prods)))
-
-        if tasks:
-            await asyncio.gather(*tasks)
+                    await self._send_once(ch, "pricing", pricing_embed(prods))
 
     async def _send_once(self, channel, key: str, embed):
         msg = await channel.send(embed=embed)
