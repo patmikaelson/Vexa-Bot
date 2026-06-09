@@ -21,4 +21,8 @@ Thumbs.db
 # Docker volumes (don't commit local data)
 mongodb_data/
 redis_data/
-".env" 
+
+# Node
+node_modules/
+payment-api/node_modules/
+payment-api/package-lock.json

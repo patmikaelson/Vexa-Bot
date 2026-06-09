@@ -20,9 +20,9 @@ async def update_presence():
         details="🛒 Vexa • Bot Shop & Security",
         timestamps={"start": int(_start_time)},
         assets={
-            "large_image": "5852430520841604823",
+            "large_image": "vexalarge",
             "large_text": "Vexa – Your Bot Business Partner",
-            "small_image": "5852430520841604822",
+            "small_image": "vexasmall",
             "small_text": "Secure • Fast • Modern",
         },
         party={"id": "ae488379-351d-4a4f-ad32-2b9b01c91657", "size": [1, 5]},

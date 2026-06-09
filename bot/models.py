@@ -1,7 +1,18 @@
 import motor.motor_asyncio
 from datetime import datetime, timezone, timedelta
 
-from bot.config import MONGODB_URI, DB_NAME
+from bot.config import MONGODB_URI, DB_NAME, ASSETS_URL
+
+CATEGORY_IMAGE_MAP = {
+    "Music": ASSETS_URL + "category_music.png",
+    "Ticket": ASSETS_URL + "category_ticket.png",
+    "Game": ASSETS_URL + "category_game.png",
+    "Utility": ASSETS_URL + "category_utility.png",
+    "AI": ASSETS_URL + "category_utility.png",
+    "FiveM": ASSETS_URL + "category_fivem.png",
+    "Security": ASSETS_URL + "category_utility.png",
+    "Giveaway": ASSETS_URL + "category_game.png",
+}
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URI)
 db = client[DB_NAME]
@@ -268,7 +279,8 @@ class ProductModel:
             "description": description,
             "price_tomans": price_tomans,
             "category": category,
-            "image_url": image_url,
+            "image_url": image_url or CATEGORY_IMAGE_MAP.get(category, ""),
+            "custom_image": "",
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
         }
@@ -284,12 +296,14 @@ class ProductModel:
         for p in FIFTY_PRODUCTS:
             exists = await products_col.find_one({"name": p["name"]})
             if not exists:
+                category = p["category"]
                 doc = {
                     "name": p["name"],
                     "description": p["description"],
                     "price_tomans": p["price_tomans"],
-                    "category": p["category"],
-                    "image_url": "",
+                    "category": category,
+                    "image_url": CATEGORY_IMAGE_MAP.get(category, ""),
+                    "custom_image": "",
                     "is_active": True,
                     "created_at": datetime.now(timezone.utc),
                 }
