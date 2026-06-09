@@ -4,7 +4,7 @@ from discord import app_commands
 
 from bot.config import GUILD_ID, ASSETS_URL
 from bot.models import UserModel, ReferralModel, invite_refs_col
-from bot.embeds import success, error
+from bot.embeds import success, error, BOT_AVATAR
 from bot.utils import referral_code, ch_name
 
 
@@ -28,7 +28,7 @@ class ReferralCog(commands.Cog):
                 await UserModel.update(uid, referral_code=code)
 
             embed = discord.Embed(color=0x5865F2, timestamp=discord.utils.utcnow())
-            embed.set_footer(text="Vexa • Secure Bot Shop")
+            embed.set_footer(text="Vexa • Secure Bot Shop", icon_url=BOT_AVATAR)
             embed.set_thumbnail(url=ASSETS_URL + "stats_thumb.png")
             embed.title = "🔗 Your Referral Link"
             embed.description = "Share this link! When someone joins and buys, you earn **10%** credit."
@@ -47,7 +47,7 @@ class ReferralCog(commands.Cog):
             top = await ReferralModel.leaderboard(10)
             embed = discord.Embed(title="🏆 Referral Leaderboard", color=0x5865F2,
                                   timestamp=discord.utils.utcnow())
-            embed.set_footer(text="Vexa • Secure Bot Shop")
+            embed.set_footer(text="Vexa • Secure Bot Shop", icon_url=BOT_AVATAR)
             embed.set_thumbnail(url=ASSETS_URL + "stats_thumb.png")
 
             if not top:

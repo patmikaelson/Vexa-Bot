@@ -4,6 +4,7 @@ from discord import app_commands, ui
 import aiohttp
 
 from bot.config import PAYMENT_API_URL, GUILD_ID, ASSETS_URL
+from bot.embeds import BOT_AVATAR
 from bot.models import ProductModel, TransactionModel, UserModel, ReferralModel, WalletDeposit, EmbedTracker
 from bot.embeds import success, error, wallet_embed, deposit_success, bot_log, live_demo_embed
 from bot.utils import tx_id, referral_code, ch_name, get_redis
@@ -156,7 +157,7 @@ class ShopCog(commands.Cog):
             return await i.response.send_message(embed=error("Empty", "No products yet."), ephemeral=True)
 
         embed = discord.Embed(title="🛒 Bot Shop", color=0x5865F2, timestamp=discord.utils.utcnow())
-        embed.set_footer(text="Built by Vexa – Secure Bot Shop")
+        embed.set_footer(text="Built by Vexa – Secure Bot Shop", icon_url=BOT_AVATAR)
         embed.set_thumbnail(url=ASSETS_URL + "pricing_thumb.png")
         for p in products:
             embed.add_field(

@@ -9,6 +9,7 @@ ERROR = 0xFF1744
 WARNING = 0xFFAB00
 GREY = 0x607D8B
 
+BOT_AVATAR = ASSETS_URL + "bot_avatar.png"
 DEFAULT_THUMB = ASSETS_URL + "default_bot_thumb.png"
 WELCOME_THUMB = ASSETS_URL + "welcome_thumb.png"
 VERIFY_THUMB = ASSETS_URL + "verify_thumb.png"
@@ -24,7 +25,7 @@ DM_WELCOME = ASSETS_URL + "dm_welcome.png"
 def _base(title: str, desc: str = None, color: int = BLURPLE) -> discord.Embed:
     e = discord.Embed(title=title, description=desc, color=color,
                       timestamp=datetime.now(timezone.utc))
-    e.set_footer(text="Built by Vexa – Secure Bot Shop", icon_url=DEFAULT_THUMB)
+    e.set_footer(text="Built by Vexa – Secure Bot Shop", icon_url=BOT_AVATAR)
     return e
 
 
@@ -166,7 +167,7 @@ def rules_embed() -> discord.Embed:
 def announcement_embed(title: str, message: str, author: str) -> discord.Embed:
     e = _base(f"📢 {title}", message)
     e.set_thumbnail(url=WELCOME_THUMB)
-    e.set_footer(text=f"Posted by {author} • Built by Vexa – Secure Bot Shop", icon_url=DEFAULT_THUMB)
+    e.set_footer(text=f"Posted by {author} • Built by Vexa – Secure Bot Shop", icon_url=BOT_AVATAR)
     return e
 
 
@@ -218,5 +219,5 @@ def live_demo_embed(product: dict, remaining: int) -> discord.Embed:
     e.add_field(name="💰 Price", value=f"{price:,} Tomans", inline=True)
     e.add_field(name="📂 Category", value=category, inline=True)
     e.set_footer(text=f"Built by Vexa – Secure Bot Shop | #{remaining} bots left in rotation",
-                 icon_url=DEFAULT_THUMB)
+                 icon_url=BOT_AVATAR)
     return e
