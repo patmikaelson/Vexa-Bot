@@ -16,7 +16,6 @@ class VerifyView(discord.ui.View):
     async def verify_btn(self, i: discord.Interaction, b: discord.ui.Button):
         guild = i.guild
 
-        # Try the specific role ID first, fall back to name
         role = guild.get_role(VERIFIED_ROLE_ID)
         if not role:
             role = discord.utils.get(guild.roles, name="✦ VXM")
@@ -41,7 +40,10 @@ class VerifyView(discord.ui.View):
             await log_ch.send(embed=bot_log("✅ Verification",
                                             f"{i.user.mention} (`{i.user.id}`) verified and received {role.mention}."))
 
-        await i.response.send_message(embed=success("Verified!", f"You now have {role.mention}."), ephemeral=True)
+        b.disabled = True
+        b.label = "✅ Verified"
+        b.style = discord.ButtonStyle.secondary
+        await i.response.edit_message(view=self)
 
 
 class VerificationCog(commands.Cog):

@@ -11,7 +11,7 @@ os.environ.setdefault("GUILD_ID", "0")
 
 from bot.celery_app import app
 from bot.models import ProductModel, TicketModel, TransactionModel, ReferralModel, EmbedTracker
-from bot.embeds import product_embed, stats_embed, flash_sale_embed, warn, leaderboard_embed, live_demo_embed, bot_log
+from bot.embeds import stats_embed, flash_sale_embed, warn, leaderboard_embed, live_demo_embed, bot_log
 from bot.utils import ch_name, get_redis
 
 
@@ -71,10 +71,14 @@ async def _demo(guild):
     product = await ProductModel.random()
     if not product:
         return
-    embed = product_embed(product)
-    view = discord.ui.View(timeout=30)
-    view.add_item(discord.ui.Button(label="🛒 Buy Now", style=discord.ButtonStyle.link,
-                                     url=f"https://discord.com/channels/{GUILD_ID}/{ch.id}"))
+    total = await ProductModel.count_active()
+    r = await get_redis()
+    remaining_key = "live_demo_remaining"
+    await r.set(remaining_key, total)
+    embed = live_demo_embed(product, total)
+    view = discord.ui.View(timeout=None)
+    view.add_item(discord.ui.Button(label="🛒 Buy Now", style=discord.ButtonStyle.primary,
+                                     custom_id=f"buy_now_{product['_id']}"))
     await _edit_or_send(ch, "live_demo", embed, view)
 
 

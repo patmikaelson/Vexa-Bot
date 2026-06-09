@@ -212,6 +212,10 @@ class TicketModel:
         )
 
     @staticmethod
+    async def get_all_open():
+        return await tickets_col.find({"status": "open"}).to_list(length=100)
+
+    @staticmethod
     async def count_open():
         return await tickets_col.count_documents({"status": "open"})
 

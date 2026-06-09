@@ -124,6 +124,8 @@ class TicketCog(commands.Cog):
             return await i.response.send_message(
                 embed=error("Active", f"You already have ticket `{active}` open."), ephemeral=True)
 
+        await i.response.defer(ephemeral=True)
+
         tid = ticket_id()
 
         cat = discord.utils.get(guild.categories, name="🎫 TICKETS")
@@ -145,14 +147,15 @@ class TicketCog(commands.Cog):
         ch = await guild.create_text_channel(
             f"ticket-{user.id}", category=cat, overwrites=overwrites, reason=f"Ticket {tid}"
         )
-        await i.response.send_message(embed=success("Opened", f"→ {ch.mention}"), ephemeral=True)
+        await i.followup.send(embed=success("Opened", f"→ {ch.mention}"), ephemeral=True)
 
         await TicketModel.create(tid, user.id, ttype, ch.id)
         await UserModel.upsert(user.id, user.name)
         await set_active_ticket(user.id, tid)
 
         embed = ticket_created(tid, ttype, user.id)
-        await ch.send(f"Welcome {user.mention}!", embed=embed, view=TicketActions(tid, ttype))
+        msg = await ch.send(f"Welcome {user.mention}!", embed=embed, view=TicketActions(tid, ttype))
+        await TicketModel.update(tid, message_id=msg.id)
 
         log_ch = discord.utils.get(guild.text_channels, name=ch_name("📊・admin-logs"))
         if log_ch:

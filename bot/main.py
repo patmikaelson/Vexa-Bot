@@ -31,27 +31,49 @@ async def update_presence():
     await bot.change_presence(activity=activity)
 
 
-@bot.event
-async def on_interaction(interaction: discord.Interaction):
-    if interaction.type == discord.InteractionType.component:
-        cid = interaction.data.get("custom_id", "")
-        if cid.startswith("buy_now_"):
-            product_id = cid.replace("buy_now_", "")
-            product = None
-            for p in await ProductModel.get_all():
-                if str(p["_id"]) == product_id:
-                    product = p
-                    break
-            if not product:
-                return await interaction.response.send_message(
-                    embed=error("Not Found", "Product no longer available."), ephemeral=True)
+@bot.listen("on_interaction")
+async def handle_components(interaction: discord.Interaction):
+    if interaction.type != discord.InteractionType.component:
+        return
+    cid = interaction.data.get("custom_id", "")
+    if cid.startswith("buy_now_"):
+        product_id = cid.replace("buy_now_", "")
+        product = None
+        for p in await ProductModel.get_all():
+            if str(p["_id"]) == product_id:
+                product = p
+                break
+        if not product:
+            return await interaction.response.send_message(
+                embed=error("Not Found", "Product no longer available."), ephemeral=True)
 
-            cog = bot.get_cog("TicketCog")
-            if cog:
-                await cog._create(interaction, "buy")
-            else:
-                await interaction.response.send_message(
-                    embed=error("Error", "Ticket system unavailable."), ephemeral=True)
+        cog = bot.get_cog("TicketCog")
+        if cog:
+            await cog._create(interaction, "buy")
+        else:
+            await interaction.response.send_message(
+                embed=error("Error", "Ticket system unavailable."), ephemeral=True)
+
+
+async def _register_persistent_views():
+    """Register persistent views so component callbacks work after restart."""
+    try:
+        from bot.cogs.verification import VerifyView
+        bot.add_view(VerifyView())
+    except Exception as e:
+        print(f"Register VerifyView error: {e}")
+    try:
+        from bot.cogs.tickets import TicketSelectView, TicketActions
+        bot.add_view(TicketSelectView())
+        open_tickets = await TicketModel.get_all_open()
+        for t in open_tickets:
+            mid = t.get("message_id")
+            if mid:
+                view = TicketActions(t["ticket_id"], t["type"])
+                bot.add_view(view, message_id=mid)
+    except Exception as e:
+        print(f"Register ticket views error: {e}")
+
 
 
 @bot.event
@@ -69,29 +91,47 @@ async def on_ready():
     except Exception as e:
         print(f"Sync error: {e}")
 
-    # Auto-setup
-    if guild:
-        from bot.cogs.setup import SetupCog
-        cog = SetupCog(bot)
-        await cog.auto_setup(guild)
-        print("Auto-setup complete.")
+    # Auto-setup (wrapped to prevent crash on failure)
+    try:
+        if guild:
+            from bot.cogs.setup import SetupCog
+            cog = SetupCog(bot)
+            await cog.auto_setup(guild)
+            print("Auto-setup complete.")
+    except Exception as e:
+        print(f"Auto-setup error: {e}")
 
     # Seed 50 products
-    count = await ProductModel.seed_50()
-    if count:
-        print(f"Seeded {count} new products.")
-    print(f"Total active products: {await ProductModel.count_active()}")
+    try:
+        count = await ProductModel.seed_50()
+        if count:
+            print(f"Seeded {count} new products.")
+        print(f"Total active products: {await ProductModel.count_active()}")
+    except Exception as e:
+        print(f"Seed/count error: {e}")
 
-    await update_presence()
+    # Register persistent views
+    try:
+        await _register_persistent_views()
+    except Exception as e:
+        print(f"Register views error: {e}")
+
+    try:
+        await update_presence()
+    except Exception as e:
+        print(f"Presence error: {e}")
 
     # Log startup
     if guild:
         log_ch = discord.utils.get(guild.text_channels, name=ch_name("⚙️・bot-logs"))
         if log_ch:
-            await log_ch.send(embed=bot_log(
-                "🟢 Bot Online",
-                f"Vexa bot started successfully.\n• Synced {len(synced)} commands\n• Active on {len(bot.guilds)} server(s)\n• {await ProductModel.count_active()} products in DB"
-            ))
+            try:
+                await log_ch.send(embed=bot_log(
+                    "🟢 Bot Online",
+                    f"Vexa bot started successfully.\n• Synced {len(synced)} commands\n• Active on {len(bot.guilds)} server(s)\n• {await ProductModel.count_active()} products in DB"
+                ))
+            except Exception as e:
+                print(f"Startup log error: {e}")
 
 
 @bot.event
