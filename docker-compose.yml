@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: vexa-mongodb
+    restart: unless-stopped
+    ports: ["27017:27017"]
+    volumes: [mongodb_data:/data/db]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:-vexasecure2024}
+    networks: [vexa-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: vexa-redis
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    command: redis-server --requirepass ${REDIS_PASSWORD:-vexaredis2024}
+    volumes: [redis_data:/data]
+    networks: [vexa-net]
+
+  payment-api:
+    build:
+      context: .
+      dockerfile: payment-api/Dockerfile
+    container_name: vexa-payment-api
+    restart: unless-stopped
+    ports: ["3001:3001"]
+    environment:
+      PORT: 3001
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID}
+      ZARINPAL_CALLBACK_URL: ${ZARINPAL_CALLBACK_URL:-http://localhost:3001/verify-payment?gateway=zarinpal}
+      NOWPAYMENTS_API_KEY: ${NOWPAYMENTS_API_KEY}
+      NOWPAYMENTS_IPN_SECRET: ${NOWPAYMENTS_IPN_SECRET}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    depends_on: [mongodb, redis]
+    networks: [vexa-net]
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: vexa-bot
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      OWNER_ID: ${OWNER_ID}
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
+      PAYMENT_API_URL: http://payment-api:3001
+    depends_on: [mongodb, redis, payment-api]
+    networks: [vexa-net]
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: vexa-celery-worker
+    restart: unless-stopped
+    command: celery -A bot.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      OWNER_ID: ${OWNER_ID}
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
+      PAYMENT_API_URL: http://payment-api:3001
+    depends_on: [mongodb, redis]
+    networks: [vexa-net]
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: vexa-celery-beat
+    restart: unless-stopped
+    command: celery -A bot.celery_app beat --loglevel=info
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      OWNER_ID: ${OWNER_ID}
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
+      PAYMENT_API_URL: http://payment-api:3001
+    depends_on: [mongodb, redis]
+    networks: [vexa-net]
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  vexa-net:
+    driver: bridge
