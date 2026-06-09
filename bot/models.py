@@ -7,11 +7,11 @@ CATEGORY_IMAGE_MAP = {
     "Music": ASSETS_URL + "category_music.png",
     "Ticket": ASSETS_URL + "category_ticket.png",
     "Game": ASSETS_URL + "category_game.png",
-    "Utility": ASSETS_URL + "category_utility.png",
-    "AI": ASSETS_URL + "category_utility.png",
+    "Giveaway": ASSETS_URL + "category_giveaway.png",
     "FiveM": ASSETS_URL + "category_fivem.png",
-    "Security": ASSETS_URL + "category_utility.png",
-    "Giveaway": ASSETS_URL + "category_game.png",
+    "Utility": ASSETS_URL + "category_utility.png",
+    "AI": ASSETS_URL + "category_ai.png",
+    "Security": ASSETS_URL + "category_security.png",
 }
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URI)
@@ -99,6 +99,22 @@ class EmbedTracker:
     @staticmethod
     async def delete(channel_key: str):
         await embeds_col.delete_one({"_id": channel_key})
+
+    @staticmethod
+    async def refresh(channel_key: str, guild, channel_name: str):
+        """Delete old tracked message and remove tracker entry. Returns True if old existed."""
+        mid = await EmbedTracker.get(channel_key)
+        if mid and guild:
+            for ch in guild.text_channels:
+                if ch.name == channel_name:
+                    try:
+                        msg = await ch.fetch_message(mid)
+                        await msg.delete()
+                    except:
+                        pass
+                    break
+        await EmbedTracker.delete(channel_key)
+        return mid is not None
 
 
 class GuildSettings:

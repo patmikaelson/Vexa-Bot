@@ -18,7 +18,6 @@ WALLET_THUMB = ASSETS_URL + "wallet_thumb.png"
 PRICING_THUMB = ASSETS_URL + "pricing_thumb.png"
 STATS_THUMB = ASSETS_URL + "stats_thumb.png"
 FLASH_SALE_BANNER = ASSETS_URL + "flash_sale_banner.png"
-VOICE_MOVE_ICON = ASSETS_URL + "voice_move_icon.png"
 DM_WELCOME = ASSETS_URL + "dm_welcome.png"
 
 

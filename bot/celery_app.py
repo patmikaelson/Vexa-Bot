@@ -13,7 +13,6 @@ app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
-        "update-live-demo": {"task": "bot.tasks.update_live_demo", "schedule": 30.0},
         "update-stats-embed": {"task": "bot.tasks.update_stats_embed", "schedule": 60.0},
         "check-alerts": {"task": "bot.tasks.check_alerts", "schedule": 30.0},
         "flash-sales": {"task": "bot.tasks.update_flash_sales", "schedule": 14400.0},

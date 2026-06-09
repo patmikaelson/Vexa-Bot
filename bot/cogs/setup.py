@@ -114,33 +114,41 @@ class SetupCog(commands.Cog):
             p[guild.me] = discord.PermissionOverwrite(view_channel=True)
         return p
 
-    async def _seed_content(self, guild: discord.Guild):
+    async def _seed_content(self, guild: discord.Guild, force: bool = False):
         from bot.embeds import rules_embed, pricing_embed
         tasks = []
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("📌・rules"))
-        if ch and not await EmbedTracker.get("rules"):
-            tasks.append(self._send_once(ch, "rules", rules_embed()))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("rules", guild, ch_name("📌・rules"))
+            if not await EmbedTracker.get("rules"):
+                tasks.append(self._send_once(ch, "rules", rules_embed()))
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("📢・announcements"))
-        if ch and not await EmbedTracker.get("announcement"):
-            tasks.append(self._send_once(ch, "announcement", announcement_embed(
-                "🚀 Vexa is Live!",
-                "Server is fully operational.\n• `/shop` — browse bots\n• `#🎫・create-ticket` — support\n• `/referral` — earn rewards",
-                "Vexa System"
-            )))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("announcement", guild, ch_name("📢・announcements"))
+            if not await EmbedTracker.get("announcement"):
+                tasks.append(self._send_once(ch, "announcement", announcement_embed(
+                    "🚀 Vexa is Live!",
+                    "Server is fully operational.\n• `/shop` — browse bots\n• `#🎫・create-ticket` — support\n• `/referral` — earn rewards",
+                    "Vexa System"
+                )))
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("💰・pricing"))
-        if ch and not await EmbedTracker.get("pricing"):
-            prods = await ProductModel.get_all()
-            if prods:
-                tasks.append(self._send_once(ch, "pricing", pricing_embed(prods)))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("pricing", guild, ch_name("💰・pricing"))
+            if not await EmbedTracker.get("pricing"):
+                prods = await ProductModel.get_all()
+                if prods:
+                    tasks.append(self._send_once(ch, "pricing", pricing_embed(prods)))
 
         if tasks:
             await asyncio.gather(*tasks)
 
-    @staticmethod
-    async def _send_once(channel, key: str, embed):
+    async def _send_once(self, channel, key: str, embed):
         msg = await channel.send(embed=embed)
         await EmbedTracker.set(key, msg.id)
 

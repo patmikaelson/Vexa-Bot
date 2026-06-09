@@ -48,9 +48,7 @@ async def _run(action: str, **kw):
         await client.login(BOT_TOKEN)
         guild = client.get_guild(GUILD_ID) or await client.fetch_guild(GUILD_ID)
 
-        if action == "live_demo":
-            await _demo(guild, client)
-        elif action == "stats":
+        if action == "stats":
             await _stats(guild)
         elif action == "alerts":
             await _alerts(guild)
@@ -62,24 +60,6 @@ async def _run(action: str, **kw):
             await _rotate(guild, client)
     finally:
         await client.close()
-
-
-async def _demo(guild):
-    ch = discord.utils.get(guild.text_channels, name=ch_name("🎬・live-demo"))
-    if not ch:
-        return
-    product = await ProductModel.random()
-    if not product:
-        return
-    total = await ProductModel.count_active()
-    r = await get_redis()
-    remaining_key = "live_demo_remaining"
-    await r.set(remaining_key, total)
-    embed = live_demo_embed(product, total)
-    view = discord.ui.View(timeout=None)
-    view.add_item(discord.ui.Button(label="🛒 Buy Now", style=discord.ButtonStyle.primary,
-                                     custom_id=f"buy_now_{product['_id']}"))
-    await _edit_or_send(ch, "live_demo", embed, view)
 
 
 async def _stats(guild):
@@ -195,14 +175,6 @@ async def _rotate(guild, client):
 
 
 # ── Celery tasks ──────────────────────────────────
-
-@app.task
-def update_live_demo():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(_run("live_demo"))
-    loop.close()
-
 
 @app.task
 def update_stats_embed():

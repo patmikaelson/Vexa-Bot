@@ -54,13 +54,15 @@ class VerificationCog(commands.Cog):
     async def on_ready(self):
         await self._ensure()
 
-    async def _ensure(self):
+    async def _ensure(self, force: bool = False):
         guild = self.bot.get_guild(GUILD_ID)
         if not guild:
             return
         ch = discord.utils.get(guild.text_channels, name=ch_name("✅・verify"))
         if not ch:
             return
+        if force:
+            await EmbedTracker.refresh("verify_panel", guild, ch_name("✅・verify"))
         if await EmbedTracker.get("verify_panel"):
             return
         msg = await ch.send(embed=verify_panel(), view=VerifyView())

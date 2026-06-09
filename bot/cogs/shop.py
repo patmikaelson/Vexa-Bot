@@ -123,13 +123,15 @@ class ShopCog(commands.Cog):
     async def on_ready(self):
         await self._ensure_live_demo()
 
-    async def _ensure_live_demo(self):
+    async def _ensure_live_demo(self, force: bool = False):
         guild = self.bot.get_guild(GUILD_ID)
         if not guild:
             return
         ch = discord.utils.get(guild.text_channels, name=ch_name("🎬・live-demo"))
         if not ch:
             return
+        if force:
+            await EmbedTracker.refresh("live_demo", guild, ch_name("🎬・live-demo"))
         if await EmbedTracker.get("live_demo"):
             return
         # Send first product immediately

@@ -110,6 +110,43 @@ async def on_ready():
     except Exception as e:
         print(f"Seed/count error: {e}")
 
+    # Force-refresh all static embeds with new images
+    try:
+        if guild:
+            from bot.cogs.setup import SetupCog
+            cog = SetupCog(bot)
+            await cog._seed_content(guild, force=True)
+            print("Static embeds refreshed.")
+    except Exception as e:
+        print(f"Refresh embeds error: {e}")
+
+    try:
+        if guild:
+            from bot.cogs.verification import VerificationCog
+            vcog = VerificationCog(bot)
+            await vcog._ensure(force=True)
+            print("Verify panel refreshed.")
+    except Exception as e:
+        print(f"Refresh verify panel error: {e}")
+
+    try:
+        if guild:
+            from bot.cogs.tickets import TicketCog
+            tcog = TicketCog(bot)
+            await tcog._ensure_panel(force=True)
+            print("Ticket panel refreshed.")
+    except Exception as e:
+        print(f"Refresh ticket panel error: {e}")
+
+    try:
+        if guild:
+            from bot.cogs.shop import ShopCog
+            scog = ShopCog(bot)
+            await scog._ensure_live_demo(force=True)
+            print("Live demo refreshed.")
+    except Exception as e:
+        print(f"Refresh live demo error: {e}")
+
     # Register persistent views
     try:
         await _register_persistent_views()
@@ -144,17 +181,8 @@ async def on_guild_remove(guild):
     await update_presence()
 
 
-@bot.tree.command(name="sync", description="Force sync all slash commands (owner only)")
-async def sync_cmd(interaction: discord.Interaction):
-    if interaction.user.id != (await bot.application_info()).owner.id and interaction.user.id != interaction.guild.owner_id:
-        return await interaction.response.send_message("❌ Only the server owner can sync.", ephemeral=True)
-    guild_obj = discord.Object(id=GUILD_ID)
-    bot.tree.copy_global_to(guild=guild_obj)
-    synced = await bot.tree.sync(guild=guild_obj)
-    await interaction.response.send_message(f"✅ Synced {len(synced)} commands.", ephemeral=True)
-
-
 async def load():
+    await bot.load_extension("bot.cogs.admin")
     await bot.load_extension("bot.cogs.setup")
     await bot.load_extension("bot.cogs.verification")
     await bot.load_extension("bot.cogs.tickets")

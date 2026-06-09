@@ -6,14 +6,14 @@ ASSETS_URL = "https://raw.githubusercontent.com/patmikaelson/Vexa-Bot/main/asset
 
 CATEGORY_IMAGE_MAP = {
     "Music": ASSETS_URL + "category_music.png",
-    "Utility": ASSETS_URL + "category_utility.png",
-    "Security": ASSETS_URL + "category_utility.png",
     "Ticket": ASSETS_URL + "category_ticket.png",
     "Game": ASSETS_URL + "category_game.png",
-    "Giveaway": ASSETS_URL + "category_game.png",
-    "Economy": ASSETS_URL + "category_utility.png",
-    "Leveling": ASSETS_URL + "category_utility.png",
-    "Welcomer": ASSETS_URL + "category_utility.png",
+    "Giveaway": ASSETS_URL + "category_giveaway.png",
+    "Utility": ASSETS_URL + "category_utility.png",
+    "Security": ASSETS_URL + "category_security.png",
+    "Economy": ASSETS_URL + "category_economy.png",
+    "Leveling": ASSETS_URL + "category_leveling.png",
+    "Welcomer": ASSETS_URL + "category_welcomer.png",
 }
 
 PRODUCTS = [

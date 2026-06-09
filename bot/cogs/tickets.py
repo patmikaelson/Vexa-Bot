@@ -103,13 +103,15 @@ class TicketCog(commands.Cog):
     async def on_ready(self):
         await self._ensure_panel()
 
-    async def _ensure_panel(self):
+    async def _ensure_panel(self, force: bool = False):
         guild = self.bot.get_guild(GUILD_ID)
         if not guild:
             return
         ch = discord.utils.get(guild.text_channels, name=ch_name("🎫・create-ticket"))
         if not ch:
             return
+        if force:
+            await EmbedTracker.refresh("ticket_panel", guild, ch_name("🎫・create-ticket"))
         if await EmbedTracker.get("ticket_panel"):
             return
         msg = await ch.send(embed=ticket_panel(), view=TicketSelectView())
@@ -260,6 +262,15 @@ class TicketCog(commands.Cog):
                 pass
 
         await i.response.send_message(embed=success("🎧 Voice", f"Created {vc.mention}."))
+
+    # ── /ticketpanel ──────────────────────────────────────────
+
+    @app_commands.command(name="ticketpanel", description="(Re)send the ticket creation panel")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def cmd_ticketpanel(self, i: discord.Interaction):
+        await EmbedTracker.delete("ticket_panel")
+        await self._ensure_panel()
+        await i.response.send_message(embed=success("Sent", "Panel placed in #🎫・create-ticket"), ephemeral=True)
 
     # ── /reopen ───────────────────────────────────────────────
 
