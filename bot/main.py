@@ -81,11 +81,12 @@ async def on_ready():
     print(f"✅ Vexa bot online as {bot.user}")
     guild = bot.get_guild(GUILD_ID)
 
-    # Sync commands (guild-only to avoid duplicates)
+    # Sync commands to guild only (no global copies to avoid duplicates)
     synced = []
     try:
         guild_obj = discord.Object(id=GUILD_ID)
         bot.tree.clear_commands(guild=guild_obj)
+        bot.tree.copy_global_to(guild=guild_obj)
         synced = await bot.tree.sync(guild=guild_obj)
         print(f"Synced {len(synced)} slash commands to guild {GUILD_ID}")
     except Exception as e:
