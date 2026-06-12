@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from bot.config import BOT_TOKEN, GUILD_ID
 from bot.embeds import bot_log, error
-from bot.models import ProductModel
+from bot.models import ProductModel, EmbedTracker
 from bot.utils import ch_name
 import time
 
@@ -110,13 +110,21 @@ async def on_ready():
     except Exception as e:
         print(f"Seed/count error: {e}")
 
-    # Force-refresh all static embeds with new images
+    # Clear old embed trackers so fresh embeds with correct images are sent
+    try:
+        if guild:
+            await EmbedTracker.clear_all(guild)
+            print("Old trackers cleared.")
+    except Exception as e:
+        print(f"Clear trackers error: {e}")
+
+    # Send fresh embeds
     try:
         if guild:
             from bot.cogs.setup import SetupCog
             cog = SetupCog(bot)
-            await cog._seed_content(guild, force=True)
-            print("Static embeds refreshed.")
+            await cog._seed_content(guild, force=False)
+            print("Static embeds seeded.")
     except Exception as e:
         print(f"Refresh embeds error: {e}")
 
@@ -124,8 +132,8 @@ async def on_ready():
         if guild:
             from bot.cogs.verification import VerificationCog
             vcog = VerificationCog(bot)
-            await vcog._ensure(force=True)
-            print("Verify panel refreshed.")
+            await vcog._ensure(force=False)
+            print("Verify panel seeded.")
     except Exception as e:
         print(f"Refresh verify panel error: {e}")
 
@@ -133,8 +141,8 @@ async def on_ready():
         if guild:
             from bot.cogs.tickets import TicketCog
             tcog = TicketCog(bot)
-            await tcog._ensure_panel(force=True)
-            print("Ticket panel refreshed.")
+            await tcog._ensure_panel(force=False)
+            print("Ticket panel seeded.")
     except Exception as e:
         print(f"Refresh ticket panel error: {e}")
 
@@ -142,8 +150,8 @@ async def on_ready():
         if guild:
             from bot.cogs.shop import ShopCog
             scog = ShopCog(bot)
-            await scog._ensure_live_demo(force=True)
-            print("Live demo refreshed.")
+            await scog._ensure_live_demo(force=False)
+            print("Live demo seeded.")
     except Exception as e:
         print(f"Refresh live demo error: {e}")
 
@@ -190,6 +198,7 @@ async def load():
     await bot.load_extension("bot.cogs.shop")
     await bot.load_extension("bot.cogs.stats")
     await bot.load_extension("bot.cogs.security")
+    await bot.load_extension("bot.cogs.voice_support")
 
 
 async def main():

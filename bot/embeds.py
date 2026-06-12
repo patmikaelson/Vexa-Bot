@@ -255,3 +255,45 @@ def live_demo_embed(product: dict, remaining: int) -> discord.Embed:
     e.set_footer(text=f"Built by Vexa – Secure Bot Shop | #{remaining} bots left in rotation",
                  icon_url=BOT_AVATAR)
     return e
+
+
+def voice_request_embed(member: discord.Member) -> discord.Embed:
+    e = discord.Embed(
+        title="🎧 Voice Support Request",
+        description=f"{member.mention} is waiting in **{member.voice.channel.mention}** for support.",
+        color=BLURPLE,
+        timestamp=datetime.now(timezone.utc)
+    )
+    e.set_thumbnail(url=ASSETS_URL + "2.png")
+    e.add_field(name="👤 User", value=f"{member.mention} (`{member.id}`)", inline=True)
+    e.add_field(name="⏰ Waiting Since", value=f"<t:{int(datetime.now().timestamp())}:R>", inline=True)
+    e.set_footer(text="Vexa • Voice Support", icon_url=BOT_AVATAR)
+    return e
+
+
+def voice_accepted_dm(channel: discord.VoiceChannel) -> discord.Embed:
+    e = discord.Embed(
+        title="✅ Request Accepted",
+        description=f"You have been moved to **{channel.name}**. Please wait, an admin will be with you shortly.",
+        color=SUCCESS,
+        timestamp=datetime.now(timezone.utc)
+    )
+    e.set_thumbnail(url=ASSETS_URL + "2.png")
+    e.add_field(name="🎧 Voice Channel", value=channel.mention, inline=False)
+    e.add_field(name="⏳ Status", value="Waiting for admin...", inline=False)
+    e.set_footer(text="Vexa • Voice Support", icon_url=BOT_AVATAR)
+    return e
+
+
+def voice_rejected_dm(reason: str) -> discord.Embed:
+    e = discord.Embed(
+        title="❌ Request Rejected",
+        description=f"We're sorry, your voice support request has been declined.",
+        color=ERROR,
+        timestamp=datetime.now(timezone.utc)
+    )
+    e.set_thumbnail(url=ASSETS_URL + "2.png")
+    e.add_field(name="📋 Reason", value=reason, inline=False)
+    e.add_field(name="💡 Alternative", value="Please open a ticket in `#🎫・create-ticket` for text support.", inline=False)
+    e.set_footer(text="Vexa • Voice Support", icon_url=BOT_AVATAR)
+    return e

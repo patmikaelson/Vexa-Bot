@@ -83,6 +83,12 @@ FIFTY_PRODUCTS = [
 ]
 
 
+EMBED_TRACKER_KEYS = [
+    "rules", "announcement", "pricing", "verify_panel", "ticket_panel",
+    "welcome", "voice_support", "support_chat", "flash_sales",
+]
+
+
 class EmbedTracker:
     @staticmethod
     async def get(channel_key: str) -> int | None:
@@ -116,6 +122,22 @@ class EmbedTracker:
                     break
         await EmbedTracker.delete(channel_key)
         return mid is not None
+
+    @staticmethod
+    async def clear_all(guild):
+        """Delete every tracked embed message and wipe all trackers."""
+        async for doc in embeds_col.find({}):
+            key = doc.get("_id")
+            mid = doc.get("message_id")
+            if mid and guild and key in EMBED_TRACKER_KEYS:
+                for ch in guild.text_channels:
+                    try:
+                        msg = await ch.fetch_message(mid)
+                        await msg.delete()
+                    except:
+                        pass
+                    break
+        await embeds_col.delete_many({})
 
 
 class GuildSettings:

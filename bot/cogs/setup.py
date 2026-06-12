@@ -91,6 +91,13 @@ class SetupCog(commands.Cog):
                     key = f"ch_{cname.lower().replace(' ', '_').replace('・', '_')}"
                     await GuildSettings.set(key, ch.id)
 
+        # Verification gate — restrict non-verified to #✅・verify only
+        try:
+            await self._setup_verification_gate(guild)
+            changes.append("Verification gate configured.")
+        except Exception as e:
+            print(f"Verification gate error: {e}")
+
         # Log to bot-logs
         log_ch = discord.utils.get(guild.text_channels, name=ch_name("⚙️・bot-logs"))
         if log_ch and changes:
@@ -110,6 +117,26 @@ class SetupCog(commands.Cog):
             p[guild.default_role] = discord.PermissionOverwrite(view_channel=False)
             p[guild.me] = discord.PermissionOverwrite(view_channel=True)
         return p
+
+    async def _setup_verification_gate(self, guild: discord.Guild):
+        verify_role = guild.get_role(1513662326450950215)
+        if not verify_role:
+            verify_role = discord.utils.get(guild.roles, name="✦ VXM")
+        if not verify_role:
+            return
+
+        verify_ch = discord.utils.get(guild.text_channels, name=ch_name("✅・verify"))
+
+        for ch in guild.channels:
+            if isinstance(ch, discord.CategoryChannel):
+                continue
+            if ch == verify_ch:
+                await ch.set_permissions(guild.default_role, view_channel=True, send_messages=False)
+            else:
+                await ch.set_permissions(guild.default_role, overwrite=None)
+                await ch.set_permissions(verify_role, view_channel=True)
+                if isinstance(ch, discord.TextChannel):
+                    await ch.set_permissions(verify_role, send_messages=True, read_message_history=True)
 
     async def _seed_content(self, guild: discord.Guild, force: bool = False):
         from bot.embeds import (rules_embed, pricing_embed, welcome_channel_embed,
