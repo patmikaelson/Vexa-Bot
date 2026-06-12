@@ -142,13 +142,14 @@ def leaderboard_embed(top: list, guild) -> discord.Embed:
 
 
 def flash_sale_embed(p: dict) -> discord.Embed:
+    price = p.get("price_tomans", 0)
     e = _base("🔥 Flash Sale!",
               f"**Limited time!**\n**{p['name']}** at a great price!")
     e.set_image(url=FLASH_SALE_BANNER)
     if p.get("image_url"):
         e.set_thumbnail(url=p["image_url"])
     e.add_field(name="🤖 Bot", value=p['name'], inline=True)
-    e.add_field(name="💰 Price", value=f"~~${p['price']*1.3:.2f}~~ **${p['price']:.2f}**", inline=True)
+    e.add_field(name="💰 Price", value=f"~~{price*1.3:,.0f}~~ **{price:,} Tomans**", inline=True)
     e.add_field(name="⏳ Offer Ends", value="Soon!", inline=False)
     return e
 
