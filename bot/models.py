@@ -4,14 +4,15 @@ from datetime import datetime, timezone, timedelta
 from bot.config import MONGODB_URI, DB_NAME, ASSETS_URL
 
 CATEGORY_IMAGE_MAP = {
-    "Music": ASSETS_URL + "category_music.png",
-    "Ticket": ASSETS_URL + "category_ticket.png",
-    "Game": ASSETS_URL + "category_game.png",
-    "Giveaway": ASSETS_URL + "category_giveaway.png",
-    "FiveM": ASSETS_URL + "category_fivem.png",
-    "Utility": ASSETS_URL + "category_utility.png",
-    "AI": ASSETS_URL + "category_ai.png",
-    "Security": ASSETS_URL + "category_security.png",
+    "Music": ASSETS_URL + "8.png",
+    "Ticket": ASSETS_URL + "4.png",
+    "Game": ASSETS_URL + "8.png",
+    "Giveaway": ASSETS_URL + "3.png",
+    "FiveM": ASSETS_URL + "2.png",
+    "Utility": ASSETS_URL + "8.png",
+    "AI": ASSETS_URL + "8.png",
+    "Security": ASSETS_URL + "8.png",
+    "Other": ASSETS_URL + "11.png",
 }
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URI)
@@ -295,7 +296,7 @@ class ProductModel:
             "description": description,
             "price_tomans": price_tomans,
             "category": category,
-            "image_url": image_url or CATEGORY_IMAGE_MAP.get(category, ""),
+            "image_url": image_url or CATEGORY_IMAGE_MAP.get(category, CATEGORY_IMAGE_MAP["Other"]),
             "custom_image": "",
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
@@ -318,7 +319,7 @@ class ProductModel:
                     "description": p["description"],
                     "price_tomans": p["price_tomans"],
                     "category": category,
-                    "image_url": CATEGORY_IMAGE_MAP.get(category, ""),
+                    "image_url": CATEGORY_IMAGE_MAP.get(category, CATEGORY_IMAGE_MAP["Other"]),
                     "custom_image": "",
                     "is_active": True,
                     "created_at": datetime.now(timezone.utc),

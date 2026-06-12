@@ -29,7 +29,7 @@ class ReferralCog(commands.Cog):
 
             embed = discord.Embed(color=0x5865F2, timestamp=discord.utils.utcnow())
             embed.set_footer(text="Vexa • Secure Bot Shop", icon_url=BOT_AVATAR)
-            embed.set_thumbnail(url=ASSETS_URL + "stats_thumb.png")
+            embed.set_thumbnail(url=ASSETS_URL + "7.png")
             embed.title = "🔗 Your Referral Link"
             embed.description = "Share this link! When someone joins and buys, you earn **10%** credit."
             embed.add_field(name="📋 Code", value=f"`{code}`", inline=True)
@@ -48,7 +48,7 @@ class ReferralCog(commands.Cog):
             embed = discord.Embed(title="🏆 Referral Leaderboard", color=0x5865F2,
                                   timestamp=discord.utils.utcnow())
             embed.set_footer(text="Vexa • Secure Bot Shop", icon_url=BOT_AVATAR)
-            embed.set_thumbnail(url=ASSETS_URL + "stats_thumb.png")
+            embed.set_thumbnail(url=ASSETS_URL + "7.png")
 
             if not top:
                 embed.description = "No referrals yet. Be the first!"

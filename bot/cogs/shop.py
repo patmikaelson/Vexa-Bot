@@ -160,7 +160,7 @@ class ShopCog(commands.Cog):
 
         embed = discord.Embed(title="🛒 Bot Shop", color=0x5865F2, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Built by Vexa – Secure Bot Shop", icon_url=BOT_AVATAR)
-        embed.set_thumbnail(url=ASSETS_URL + "pricing_thumb.png")
+        embed.set_thumbnail(url=ASSETS_URL + "6.png")
         for p in products:
             embed.add_field(
                 name=f"🤖 {p['name']}",

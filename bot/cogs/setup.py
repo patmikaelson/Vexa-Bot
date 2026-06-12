@@ -112,7 +112,8 @@ class SetupCog(commands.Cog):
         return p
 
     async def _seed_content(self, guild: discord.Guild, force: bool = False):
-        from bot.embeds import rules_embed, pricing_embed
+        from bot.embeds import (rules_embed, pricing_embed, welcome_channel_embed,
+                                voice_support_embed, support_chat_embed, flash_sale_embed)
 
         ch = discord.utils.get(guild.text_channels, name=ch_name("📌・rules"))
         if ch:
@@ -140,6 +141,36 @@ class SetupCog(commands.Cog):
                 prods = await ProductModel.get_all()
                 if prods:
                     await self._send_once(ch, "pricing", pricing_embed(prods))
+
+        ch = discord.utils.get(guild.text_channels, name=ch_name("👋・welcome"))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("welcome", guild, ch_name("👋・welcome"))
+            if not await EmbedTracker.get("welcome"):
+                await self._send_once(ch, "welcome", welcome_channel_embed())
+
+        ch = discord.utils.get(guild.text_channels, name=ch_name("🎧・voice-support"))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("voice_support", guild, ch_name("🎧・voice-support"))
+            if not await EmbedTracker.get("voice_support"):
+                await self._send_once(ch, "voice_support", voice_support_embed())
+
+        ch = discord.utils.get(guild.text_channels, name=ch_name("💬・support-chat"))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("support_chat", guild, ch_name("💬・support-chat"))
+            if not await EmbedTracker.get("support_chat"):
+                await self._send_once(ch, "support_chat", support_chat_embed())
+
+        ch = discord.utils.get(guild.text_channels, name=ch_name("🔥・flash-sales"))
+        if ch:
+            if force:
+                await EmbedTracker.refresh("flash_sales", guild, ch_name("🔥・flash-sales"))
+            if not await EmbedTracker.get("flash_sales"):
+                product = await ProductModel.random()
+                if product:
+                    await self._send_once(ch, "flash_sales", flash_sale_embed(product))
 
     async def _send_once(self, channel, key: str, embed):
         msg = await channel.send(embed=embed)
@@ -191,7 +222,8 @@ class SetupCog(commands.Cog):
                 d += 1
             except:
                 pass
-        for key in ["rules", "announcement", "pricing", "verify_panel", "ticket_panel"]:
+        for key in ["rules", "announcement", "pricing", "verify_panel", "ticket_panel",
+                     "welcome", "voice_support", "support_chat", "flash_sales"]:
             await EmbedTracker.delete(key)
         print(f"Purge: deleted {d} channels/categories")
 

@@ -69,14 +69,15 @@ TICKET_TYPES = {
 ASSETS_URL = "https://raw.githubusercontent.com/patmikaelson/Vexa-Bot/main/assets/"
 
 CATEGORY_IMAGE_MAP = {
-    "Music": ASSETS_URL + "category_music.png",
-    "Ticket": ASSETS_URL + "category_ticket.png",
-    "Game": ASSETS_URL + "category_game.png",
-    "Giveaway": ASSETS_URL + "category_giveaway.png",
-    "FiveM": ASSETS_URL + "category_fivem.png",
-    "Utility": ASSETS_URL + "category_utility.png",
-    "AI": ASSETS_URL + "category_ai.png",
-    "Security": ASSETS_URL + "category_security.png",
+    "Music": ASSETS_URL + "8.png",
+    "Ticket": ASSETS_URL + "4.png",
+    "Game": ASSETS_URL + "8.png",
+    "Giveaway": ASSETS_URL + "3.png",
+    "FiveM": ASSETS_URL + "2.png",
+    "Utility": ASSETS_URL + "8.png",
+    "AI": ASSETS_URL + "8.png",
+    "Security": ASSETS_URL + "8.png",
+    "Other": ASSETS_URL + "11.png",
 }
 
 PROFANITY_LIST = [

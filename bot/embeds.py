@@ -9,16 +9,16 @@ ERROR = 0xFF1744
 WARNING = 0xFFAB00
 GREY = 0x607D8B
 
-BOT_AVATAR = ASSETS_URL + "bot_avatar.png"
-DEFAULT_THUMB = ASSETS_URL + "default_bot_thumb.png"
-WELCOME_THUMB = ASSETS_URL + "welcome_thumb.png"
-VERIFY_THUMB = ASSETS_URL + "verify_thumb.png"
-TICKET_THUMB = ASSETS_URL + "ticket_thumb.png"
-WALLET_THUMB = ASSETS_URL + "wallet_thumb.png"
-PRICING_THUMB = ASSETS_URL + "pricing_thumb.png"
-STATS_THUMB = ASSETS_URL + "stats_thumb.png"
-FLASH_SALE_BANNER = ASSETS_URL + "flash_sale_banner.png"
-DM_WELCOME = ASSETS_URL + "dm_welcome.png"
+BOT_AVATAR = ASSETS_URL + "11.png"
+DEFAULT_THUMB = ASSETS_URL + "8.png"
+WELCOME_THUMB = ASSETS_URL + "1.png"
+VERIFY_THUMB = ASSETS_URL + "9.png"
+TICKET_THUMB = ASSETS_URL + "4.png"
+WALLET_THUMB = ASSETS_URL + "10.png"
+PRICING_THUMB = ASSETS_URL + "6.png"
+STATS_THUMB = ASSETS_URL + "7.png"
+FLASH_SALE_BANNER = ASSETS_URL + "5.png"
+DM_WELCOME = ASSETS_URL + "1.png"
 
 
 def _base(title: str, desc: str = None, color: int = BLURPLE) -> discord.Embed:
@@ -51,6 +51,8 @@ def verify_panel() -> discord.Embed:
 def welcome_dm(name: str) -> discord.Embed:
     e = success("🎉 Welcome!", f"Hey **{name}**, you've been verified!")
     e.set_image(url=DM_WELCOME)
+    e.set_thumbnail(url=DM_WELCOME)
+    e.set_footer(text="Built by Vexa – Secure Bot Shop", icon_url=DM_WELCOME)
     e.add_field(name="🌟 What's Next?",
                 value="• `/shop` — browse bots\n• `#🎫・create-ticket` — get help\n• `/referral` — earn rewards",
                 inline=False)
@@ -143,11 +145,11 @@ def flash_sale_embed(p: dict) -> discord.Embed:
     e = _base("🔥 Flash Sale!",
               f"**Limited time!**\n**{p['name']}** at a great price!")
     e.set_image(url=FLASH_SALE_BANNER)
+    if p.get("image_url"):
+        e.set_thumbnail(url=p["image_url"])
     e.add_field(name="🤖 Bot", value=p['name'], inline=True)
     e.add_field(name="💰 Price", value=f"~~${p['price']*1.3:.2f}~~ **${p['price']:.2f}**", inline=True)
     e.add_field(name="⏳ Offer Ends", value="Soon!", inline=False)
-    if p.get("image_url"):
-        e.set_image(url=p["image_url"])
     return e
 
 
@@ -167,6 +169,38 @@ def announcement_embed(title: str, message: str, author: str) -> discord.Embed:
     e = _base(f"📢 {title}", message)
     e.set_thumbnail(url=WELCOME_THUMB)
     e.set_footer(text=f"Posted by {author} • Built by Vexa – Secure Bot Shop", icon_url=BOT_AVATAR)
+    return e
+
+
+def welcome_channel_embed() -> discord.Embed:
+    e = _base("👋 Welcome to Vexa!",
+              "Your premium bot marketplace. Browse, buy, and get support — all in one place.")
+    e.set_image(url=WELCOME_THUMB)
+    e.add_field(name="🛒 Browse Bots", value="Use `/shop` or visit `#🎬・live-demo`", inline=True)
+    e.add_field(name="🎫 Need Help?", value="Open a ticket in `#🎫・create-ticket`", inline=True)
+    e.add_field(name="💰 Earn Rewards", value="Use `/referral` to earn credit", inline=False)
+    return e
+
+
+def voice_support_embed() -> discord.Embed:
+    e = _base("🎧 Voice Support",
+              "Join this voice channel to speak directly with our support team.")
+    e.set_thumbnail(url=ASSETS_URL + "2.png")
+    e.add_field(name="📋 How it works",
+                value="1. Open a **Support** ticket in `#🎫・create-ticket`\n"
+                       "2. Request **Voice Support** inside the ticket\n"
+                       "3. A private voice channel will be created for you",
+                inline=False)
+    return e
+
+
+def support_chat_embed() -> discord.Embed:
+    e = _base("💬 Support Chat",
+              "Need help? Ask here and our team will assist you.")
+    e.set_thumbnail(url=TICKET_THUMB)
+    e.add_field(name="📌 Tips",
+                value="• Be clear about your issue\n• Tag `@Support` for faster response\n• For private matters, use `#🎫・create-ticket`",
+                inline=False)
     return e
 
 

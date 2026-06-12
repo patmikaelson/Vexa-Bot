@@ -5,15 +5,15 @@ MONGODB_URI = "mongodb://admin:vexasecure2024@localhost:27017/vexa?authSource=ad
 ASSETS_URL = "https://raw.githubusercontent.com/patmikaelson/Vexa-Bot/main/assets/"
 
 CATEGORY_IMAGE_MAP = {
-    "Music": ASSETS_URL + "category_music.png",
-    "Ticket": ASSETS_URL + "category_ticket.png",
-    "Game": ASSETS_URL + "category_game.png",
-    "Giveaway": ASSETS_URL + "category_giveaway.png",
-    "Utility": ASSETS_URL + "category_utility.png",
-    "Security": ASSETS_URL + "category_security.png",
-    "Economy": ASSETS_URL + "category_economy.png",
-    "Leveling": ASSETS_URL + "category_leveling.png",
-    "Welcomer": ASSETS_URL + "category_welcomer.png",
+    "Music": ASSETS_URL + "8.png",
+    "Ticket": ASSETS_URL + "4.png",
+    "Game": ASSETS_URL + "8.png",
+    "Giveaway": ASSETS_URL + "3.png",
+    "Utility": ASSETS_URL + "8.png",
+    "Security": ASSETS_URL + "8.png",
+    "Economy": ASSETS_URL + "11.png",
+    "Leveling": ASSETS_URL + "11.png",
+    "Welcomer": ASSETS_URL + "11.png",
 }
 
 PRODUCTS = [
@@ -43,7 +43,7 @@ async def seed():
             "description": p["description"],
             "price": p["price"],
             "category": category,
-            "image_url": CATEGORY_IMAGE_MAP.get(category, ASSETS_URL + "default_bot_thumb.png"),
+            "image_url": CATEGORY_IMAGE_MAP.get(category, ASSETS_URL + "11.png"),
             "custom_image": "",
             "gif_url": p.get("gif_url", ""),
         }
