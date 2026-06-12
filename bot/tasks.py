@@ -113,7 +113,7 @@ async def _leaderboard(guild):
     await _edit_or_send(ch, "leaderboard", embed)
 
 
-# ── Live Demo Rotation (24h) ──────────────────────────────
+# ── Live Demo Rotation (12h) ──────────────────────────────
 
 async def _rotate(guild, client):
     ch = discord.utils.get(guild.text_channels, name=ch_name("🎬・live-demo"))
@@ -130,7 +130,6 @@ async def _rotate(guild, client):
     total = len(products)
     r = await get_redis()
     index_key = "live_demo_index"
-    remaining_key = "live_demo_remaining"
 
     current_index = await r.get(index_key)
     if current_index is None:
@@ -140,7 +139,6 @@ async def _rotate(guild, client):
 
     remaining = total - current_index
     await r.set(index_key, current_index)
-    await r.set(remaining_key, remaining)
 
     product = products[current_index]
 
@@ -150,28 +148,12 @@ async def _rotate(guild, client):
     view.add_item(btn)
 
     embed = live_demo_embed(product, remaining)
-    await _edit_or_send(ch, "live_demo", embed, view)
+    # Send as new message — never delete or edit previous ones
+    await ch.send(embed=embed, view=view)
 
     if log_ch:
         await log_ch.send(embed=bot_log("🔄 Live Demo Rotated",
-                                        f"Now showing **{product['name']}**. Remaining: **{remaining}**."))
-
-    if remaining <= 3:
-        owner_id = int(os.getenv("OWNER_ID", "0"))
-        if owner_id:
-            try:
-                owner = await guild.fetch_member(owner_id)
-                if owner:
-                    await owner.send(
-                        embed=warn("⚠️ Low Bot Rotation",
-                                   f"Only **{remaining}** bots left in the live demo rotation.\n"
-                                   "Please add more products using `/add_product`."))
-            except:
-                pass
-        if log_ch:
-            await log_ch.send(
-                embed=warn("⚠️ Low Rotation",
-                           f"Only **{remaining}** bots left. Please add more products via `/add_product`."))
+                                        f"Now showing **{product['name']}** ({current_index+1}/{total})."))
 
 
 # ── Celery tasks ──────────────────────────────────

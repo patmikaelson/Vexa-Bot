@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from bot.config import BOT_TOKEN, GUILD_ID
 from bot.embeds import bot_log, error
-from bot.models import ProductModel, EmbedTracker
+from bot.models import ProductModel
 from bot.utils import ch_name
 import time
 
@@ -111,15 +111,7 @@ async def on_ready():
     except Exception as e:
         print(f"Seed/count error: {e}")
 
-    # Clear old embed trackers so fresh embeds with correct images are sent
-    try:
-        if guild:
-            await EmbedTracker.clear_all(guild)
-            print("Old trackers cleared.")
-    except Exception as e:
-        print(f"Clear trackers error: {e}")
-
-    # Send fresh embeds
+    # Send static embeds (only if no tracker exists — sent once)
     try:
         if guild:
             from bot.cogs.setup import SetupCog

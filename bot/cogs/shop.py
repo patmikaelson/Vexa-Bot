@@ -130,25 +130,23 @@ class ShopCog(commands.Cog):
         ch = discord.utils.get(guild.text_channels, name=ch_name("🎬・live-demo"))
         if not ch:
             return
-        if force:
-            await EmbedTracker.refresh("live_demo", guild, ch_name("🎬・live-demo"))
-        if await EmbedTracker.get("live_demo"):
+        # Send first product (index 0) as new message — not tracked, never deleted
+        products = await ProductModel.get_all()
+        if not products:
             return
-        # Send first product immediately
-        product = await ProductModel.random()
-        if not product:
-            return
-        total = await ProductModel.count_active()
+        total = len(products)
         r = await get_redis()
+        index = await r.get("live_demo_index")
+        if index is not None:
+            return
         await r.set("live_demo_index", 0)
-        await r.set("live_demo_remaining", total)
+        product = products[0]
         view = ui.View(timeout=None)
         btn = ui.Button(label="🛒 Buy Now", style=discord.ButtonStyle.primary,
                         custom_id=f"buy_now_{product['_id']}")
         view.add_item(btn)
         embed = live_demo_embed(product, total)
-        msg = await ch.send(embed=embed, view=view)
-        await EmbedTracker.set("live_demo", msg.id)
+        await ch.send(embed=embed, view=view)
 
     # ── Commands ──────────────────────────────────────────────
 

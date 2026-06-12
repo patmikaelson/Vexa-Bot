@@ -19,7 +19,7 @@ app.conf.update(
         "update-leaderboard": {"task": "bot.tasks.update_leaderboard", "schedule": 60.0},
         "rotate-live-demo": {
             "task": "bot.tasks.rotate_live_demo",
-            "schedule": crontab(hour=0, minute=0),
+            "schedule": crontab(hour="0,12", minute=0),
         },
     },
 )

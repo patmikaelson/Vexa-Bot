@@ -40,10 +40,7 @@ class VerifyView(discord.ui.View):
             await log_ch.send(embed=bot_log("✅ Verification",
                                             f"{i.user.mention} (`{i.user.id}`) verified and received {role.mention}."))
 
-        b.disabled = True
-        b.label = "✅ Verified"
-        b.style = discord.ButtonStyle.secondary
-        await i.response.edit_message(view=self)
+        await i.response.send_message(embed=success("Verified", "You now have full access to the server."), ephemeral=True)
 
 
 class VerificationCog(commands.Cog):

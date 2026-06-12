@@ -241,7 +241,6 @@ def live_demo_embed(product: dict, remaining: int) -> discord.Embed:
     desc = product.get("description", "")
     price = product.get("price_tomans", 0)
     category = product.get("category", "General")
-    img = product.get("image_url") or DEFAULT_THUMB
 
     e = discord.Embed(
         title=f"🎵 Now Showing: {name}",
@@ -249,7 +248,7 @@ def live_demo_embed(product: dict, remaining: int) -> discord.Embed:
         color=BLURPLE,
         timestamp=datetime.now(timezone.utc)
     )
-    e.set_thumbnail(url=img)
+    e.set_thumbnail(url=WELCOME_THUMB)
     e.add_field(name="💰 Price", value=f"{price:,} Tomans", inline=True)
     e.add_field(name="📂 Category", value=category, inline=True)
     e.set_footer(text=f"Built by Vexa – Secure Bot Shop | #{remaining} bots left in rotation",
