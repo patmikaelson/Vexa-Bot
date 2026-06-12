@@ -27,7 +27,12 @@ invite_refs_col = db["invite_refs"]
 embeds_col = db["embeds"]
 guild_settings_col = db["guild_settings"]
 wallet_deposits_col = db["wallet_deposits"]
-
+guild_plans_col = db["guild_plans"]
+premium_products_col = db["premium_products"]
+werewolf_games_col = db["werewolf_games"]
+economy_col = db["economy"]
+ai_sessions_col = db["ai_sessions"]
+ai_conversations_col = db["ai_conversations"]
 
 FIFTY_PRODUCTS = [
     {"name": "Auralux", "description": "High-quality music playback from YouTube, Spotify, SoundCloud with live equalizer and sound effects.", "price_tomans": 1500000, "category": "Music"},
@@ -82,10 +87,18 @@ FIFTY_PRODUCTS = [
     {"name": "Game Server Logs", "description": "Receive and display game server logs (Minecraft, Rust, etc.) in a Discord channel.", "price_tomans": 1800000, "category": "FiveM"},
 ]
 
-
 EMBED_TRACKER_KEYS = [
     "rules", "announcement", "pricing", "verify_panel", "ticket_panel",
     "welcome", "voice_support", "support_chat", "flash_sales",
+]
+
+PLANS = ["free", "silver", "gold", "platinum", "ultimate"]
+
+PREMIUM_PRODUCTS_SEED = [
+    {"plan_name": "Silver", "price_tomans": 199000, "description": "Starter premium with essential perks", "features": {"custom_embed_color": True, "custom_footer": True, "temp_voice": True, "fivem_status": True, "custom_welcome_gif": True, "more_polls": True, "max_concurrent_tickets": 3, "file_upload_mb": 10, "log_retention_days": 7, "custom_commands": 3, "personality_modes": 3}},
+    {"plan_name": "Gold", "price_tomans": 499000, "description": "Advanced features for growing servers", "features": {"custom_embed_color": True, "custom_footer": True, "temp_voice": True, "fivem_status": True, "fivem_whitelist": True, "fivem_rp_helper": True, "werewolf": True, "duel_arena": True, "giveaway": True, "rpg": True, "linkkeeper": True, "qotd": True, "summarizer": True, "custom_welcome_gif": True, "more_polls": True, "max_concurrent_tickets": 8, "file_upload_mb": 25, "log_retention_days": 14, "custom_commands": 10, "personality_modes": 5}},
+    {"plan_name": "Platinum", "price_tomans": 999000, "description": "Professional suite with AI power", "features": {"custom_embed_color": True, "custom_footer": True, "temp_voice": True, "fivem_status": True, "fivem_whitelist": True, "fivem_rp_helper": True, "fivem_events": True, "werewolf": True, "werewolf_extra_roles": True, "duel_arena": True, "giveaway": True, "rpg": True, "casino": True, "pokemon": True, "linkkeeper": True, "qotd": True, "auto_translate": True, "summarizer": True, "auto_faq": True, "sentiment": True, "gpt4_chat": True, "dalle": True, "avatar_changer": True, "ip_vpn_detection": True, "custom_welcome_gif": True, "more_polls": True, "max_concurrent_tickets": 15, "file_upload_mb": 50, "log_retention_days": 30, "custom_commands": 20, "personality_modes": 10}},
+    {"plan_name": "Ultimate", "price_tomans": 1999000, "description": "Everything unlocked, no limits", "features": {"custom_embed_color": True, "custom_footer": True, "temp_voice": True, "fivem_status": True, "fivem_whitelist": True, "fivem_rp_helper": True, "fivem_events": True, "fivem_rank_sync": True, "werewolf": True, "werewolf_extra_roles": True, "duel_arena": True, "giveaway": True, "rpg": True, "casino": True, "pokemon": True, "snake_tetris": True, "linkkeeper": True, "qotd": True, "auto_translate": True, "webhook_sender": True, "embed_templates": True, "summarizer": True, "auto_faq": True, "sentiment": True, "tts": True, "language_detection": True, "gpt4_chat": True, "dalle": True, "avatar_changer": True, "ip_vpn_detection": True, "custom_welcome_gif": True, "more_polls": True, "max_concurrent_tickets": 999, "file_upload_mb": 500, "log_retention_days": 90, "custom_commands": 999, "personality_modes": 999}},
 ]
 
 
@@ -109,7 +122,6 @@ class EmbedTracker:
 
     @staticmethod
     async def refresh(channel_key: str, guild, channel_name: str):
-        """Delete old tracked message and remove tracker entry. Returns True if old existed."""
         mid = await EmbedTracker.get(channel_key)
         if mid and guild:
             for ch in guild.text_channels:
@@ -125,7 +137,6 @@ class EmbedTracker:
 
     @staticmethod
     async def clear_all(guild):
-        """Delete every tracked embed message and wipe all trackers."""
         async for doc in embeds_col.find({}):
             key = doc.get("_id")
             mid = doc.get("message_id")
@@ -140,30 +151,90 @@ class EmbedTracker:
         await embeds_col.delete_many({})
 
 
-class GuildSettings:
+class GuildSettingsManager:
     @staticmethod
-    async def get(key: str):
-        doc = await guild_settings_col.find_one({"_id": "guild"})
-        return doc.get(key) if doc else None
+    async def get(guild_id: int, key: str, default=None):
+        doc = await guild_settings_col.find_one({"guild_id": guild_id})
+        return doc.get(key, default) if doc else default
 
     @staticmethod
-    async def set(key: str, value):
+    async def set(guild_id: int, **kwargs):
         await guild_settings_col.update_one(
-            {"_id": "guild"},
-            {"$set": {key: value}},
+            {"guild_id": guild_id},
+            {"$set": kwargs, "$setOnInsert": {"guild_id": guild_id}},
             upsert=True
         )
 
     @staticmethod
-    async def get_all():
-        return await guild_settings_col.find_one({"_id": "guild"}) or {}
+    async def get_all(guild_id: int):
+        return await guild_settings_col.find_one({"guild_id": guild_id}) or {"guild_id": guild_id}
+
+
+class GuildPlanModel:
+    @staticmethod
+    async def get(guild_id: int):
+        return await guild_plans_col.find_one({"guild_id": guild_id})
 
     @staticmethod
-    async def delete(key: str):
-        await guild_settings_col.update_one(
-            {"_id": "guild"},
-            {"$unset": {key: ""}}
+    async def create(guild_id: int, plan_type: str, payment_id: str = "", upgraded_from: str = None):
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=30)
+        doc = {
+            "guild_id": guild_id,
+            "plan_type": plan_type,
+            "start_date": now,
+            "end_date": end_date,
+            "is_active": True,
+            "auto_renew": False,
+            "payment_id": payment_id,
+            "upgraded_from": upgraded_from,
+        }
+        await guild_plans_col.update_one({"guild_id": guild_id}, {"$set": doc}, upsert=True)
+        return doc
+
+    @staticmethod
+    async def deactivate(guild_id: int):
+        await guild_plans_col.update_one({"guild_id": guild_id}, {"$set": {"is_active": False}})
+
+    @staticmethod
+    async def set_plan(guild_id: int, plan_type: str):
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=30)
+        await guild_plans_col.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"plan_type": plan_type, "start_date": now, "end_date": end_date, "is_active": True}},
+            upsert=True
         )
+
+    @staticmethod
+    async def get_expired():
+        return await guild_plans_col.find({
+            "is_active": True, "end_date": {"$lt": datetime.now(timezone.utc)}
+        }).to_list(length=100)
+
+    @staticmethod
+    async def get_expiring_soon(days: int = 3):
+        threshold = datetime.now(timezone.utc) + timedelta(days=days)
+        return await guild_plans_col.find({
+            "is_active": True, "end_date": {"$lt": threshold, "$gte": datetime.now(timezone.utc)}
+        }).to_list(length=100)
+
+
+class PremiumProductModel:
+    @staticmethod
+    async def get_all():
+        return await premium_products_col.find().to_list(length=10)
+
+    @staticmethod
+    async def seed():
+        existing = await premium_products_col.count_documents({})
+        if existing > 0:
+            return existing
+        for p in PREMIUM_PRODUCTS_SEED:
+            exists = await premium_products_col.find_one({"plan_name": p["plan_name"]})
+            if not exists:
+                await premium_products_col.insert_one(p)
+        return await premium_products_col.count_documents({})
 
 
 class UserModel:
@@ -179,6 +250,7 @@ class UserModel:
                 "user_id": user_id, "name": name, "verified": False,
                 "wallet_balance": 0.0, "referral_code": None,
                 "referred_by": None, "customer": False,
+                "trivia_score": 0, "economy_data": {},
                 "created_at": datetime.now(timezone.utc),
             }},
             upsert=True
@@ -210,13 +282,38 @@ class UserModel:
             .sort("created_at", -1).to_list(length=limit)
 
 
+class EconomyModel:
+    @staticmethod
+    async def get(user_id: int):
+        return await economy_col.find_one({"user_id": user_id})
+
+    @staticmethod
+    async def ensure(user_id: int):
+        doc = await economy_col.find_one({"user_id": user_id})
+        if not doc:
+            doc = {
+                "user_id": user_id, "balance": 0, "daily_streak": 0, "last_daily": None,
+                "items": [], "level": 1, "xp": 0,
+            }
+            await economy_col.insert_one(doc)
+        return doc
+
+    @staticmethod
+    async def update(user_id: int, **kwargs):
+        await economy_col.update_one({"user_id": user_id}, {"$set": kwargs}, upsert=True)
+
+    @staticmethod
+    async def inc(user_id: int, **kwargs):
+        await economy_col.update_one({"user_id": user_id}, {"$inc": kwargs}, upsert=True)
+
+
 class TicketModel:
     @staticmethod
     async def create(ticket_id: str, user_id: int, ticket_type: str,
-                     channel_id: int, priority: str = "medium"):
+                     channel_id: int, guild_id: int = 0, priority: str = "medium"):
         doc = {
             "ticket_id": ticket_id, "user_id": user_id, "type": ticket_type,
-            "channel_id": channel_id, "voice_channel_id": None,
+            "guild_id": guild_id, "channel_id": channel_id, "voice_channel_id": None,
             "priority": priority, "status": "open", "messages": [],
             "created_at": datetime.now(timezone.utc),
             "last_response_at": datetime.now(timezone.utc), "closed_at": None,
@@ -234,8 +331,15 @@ class TicketModel:
         return await tickets_col.find_one({"channel_id": channel_id})
 
     @staticmethod
-    async def get_by_user(user_id: int):
-        return await tickets_col.find_one({"user_id": user_id, "status": "open"})
+    async def get_by_user(user_id: int, guild_id: int = 0):
+        q = {"user_id": user_id, "status": "open"}
+        if guild_id:
+            q["guild_id"] = guild_id
+        return await tickets_col.find_one(q)
+
+    @staticmethod
+    async def count_open_by_guild(guild_id: int):
+        return await tickets_col.count_documents({"guild_id": guild_id, "status": "open"})
 
     @staticmethod
     async def update(ticket_id: str, **kwargs):
@@ -354,11 +458,11 @@ class ProductModel:
 class TransactionModel:
     @staticmethod
     async def create(tx_id: str, user_id: int, product_id: str, amount: float,
-                     currency: str, gateway: str, tx_type: str = "purchase"):
+                     currency: str, gateway: str, tx_type: str = "purchase", guild_id: int = 0, plan: str = ""):
         doc = {
             "tx_id": tx_id, "user_id": user_id, "product_id": product_id,
-            "amount": amount, "currency": currency, "gateway": gateway,
-            "status": "pending", "type": tx_type,
+            "guild_id": guild_id, "amount": amount, "currency": currency,
+            "gateway": gateway, "status": "pending", "type": tx_type, "plan": plan,
             "referrer_id": None, "referral_bonus": 0.0,
             "created_at": datetime.now(timezone.utc), "completed_at": None,
         }
@@ -446,3 +550,110 @@ class WalletDeposit:
             "tx_id": tx_id, "status": "completed",
             "created_at": datetime.now(timezone.utc),
         })
+
+
+class WerewolfGameModel:
+    @staticmethod
+    async def create(game_id: str, guild_id: int, channel_id: int):
+        doc = {
+            "game_id": game_id, "guild_id": guild_id, "channel_id": channel_id,
+            "players": [], "phase": "lobby", "history": [],
+            "created_at": datetime.now(timezone.utc),
+        }
+        await werewolf_games_col.insert_one(doc)
+        return doc
+
+    @staticmethod
+    async def get(game_id: str):
+        return await werewolf_games_col.find_one({"game_id": game_id})
+
+    @staticmethod
+    async def get_active(guild_id: int):
+        return await werewolf_games_col.find_one({"guild_id": guild_id, "phase": {"$ne": "ended"}})
+
+    @staticmethod
+    async def update(game_id: str, **kwargs):
+        await werewolf_games_col.update_one({"game_id": game_id}, {"$set": kwargs})
+
+    @staticmethod
+    async def end(game_id: str):
+        await werewolf_games_col.update_one(
+            {"game_id": game_id},
+            {"$set": {"phase": "ended", "ended_at": datetime.now(timezone.utc)}}
+        )
+
+
+class AISessionModel:
+    @staticmethod
+    async def create(guild_id: int, user_id: int, channel_id: int):
+        doc = {
+            "guild_id": guild_id, "user_id": user_id, "channel_id": channel_id,
+            "created_at": datetime.now(timezone.utc),
+            "last_activity": datetime.now(timezone.utc),
+            "total_messages": 0, "is_active": True,
+        }
+        await ai_sessions_col.insert_one(doc)
+        return doc
+
+    @staticmethod
+    async def get_by_channel(channel_id: int):
+        return await ai_sessions_col.find_one({"channel_id": channel_id, "is_active": True})
+
+    @staticmethod
+    async def get_by_user(guild_id: int, user_id: int):
+        return await ai_sessions_col.find_one({"guild_id": guild_id, "user_id": user_id, "is_active": True})
+
+    @staticmethod
+    async def get_active_by_guild(guild_id: int):
+        return await ai_sessions_col.find({"guild_id": guild_id, "is_active": True}).to_list(length=100)
+
+    @staticmethod
+    async def deactivate(channel_id: int):
+        await ai_sessions_col.update_one(
+            {"channel_id": channel_id},
+            {"$set": {"is_active": False}}
+        )
+
+    @staticmethod
+    async def update_activity(channel_id: int, total_messages: int = None):
+        update = {"last_activity": datetime.now(timezone.utc)}
+        if total_messages is not None:
+            update["total_messages"] = total_messages
+        await ai_sessions_col.update_one({"channel_id": channel_id}, {"$set": update})
+
+    @staticmethod
+    async def get_inactive(hours: int = 168):
+        threshold = datetime.now(timezone.utc) - timedelta(hours=hours)
+        return await ai_sessions_col.find({
+            "is_active": True, "last_activity": {"$lt": threshold}
+        }).to_list(length=50)
+
+    @staticmethod
+    async def get_all_active():
+        return await ai_sessions_col.find({"is_active": True}).to_list(length=200)
+
+
+class AIConversationModel:
+    @staticmethod
+    async def save_message(channel_id: int, role: str, content: str):
+        await ai_conversations_col.insert_one({
+            "channel_id": channel_id,
+            "role": role, "content": content,
+            "timestamp": datetime.now(timezone.utc),
+        })
+
+    @staticmethod
+    async def get_history(channel_id: int, limit: int = 50):
+        cursor = ai_conversations_col.find({"channel_id": channel_id}) \
+            .sort("timestamp", -1).limit(limit)
+        docs = await cursor.to_list(length=limit)
+        docs.reverse()
+        return docs
+
+    @staticmethod
+    async def get_history_by_user(user_id: int, limit: int = 20):
+        sessions = await ai_sessions_col.find({"user_id": user_id, "is_active": True}).to_list(length=5)
+        channel_ids = [s["channel_id"] for s in sessions]
+        cursor = ai_conversations_col.find({"channel_id": {"$in": channel_ids}}) \
+            .sort("timestamp", -1).limit(limit)
+        return await cursor.to_list(length=limit)

@@ -53,6 +53,7 @@ services:
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
       REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
       PAYMENT_API_URL: http://payment-api:3001
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     depends_on: [mongodb, redis, payment-api]
     networks: [vexa-net]
 
@@ -70,6 +71,7 @@ services:
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
       REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
       PAYMENT_API_URL: http://payment-api:3001
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     depends_on: [mongodb, redis]
     networks: [vexa-net]
 
@@ -87,6 +89,7 @@ services:
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-vexasecure2024}@mongodb:27017/vexa?authSource=admin
       REDIS_URL: redis://:${REDIS_PASSWORD:-vexaredis2024}@redis:6379/0
       PAYMENT_API_URL: http://payment-api:3001
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     depends_on: [mongodb, redis]
     networks: [vexa-net]
 

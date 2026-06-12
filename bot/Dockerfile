@@ -7,4 +7,5 @@ COPY assets/ /app/assets/
 
 RUN pip install --no-cache-dir -r /app/bot/requirements.txt
 
+ENV PYTHONUNBUFFERED=1
 CMD ["python", "-m", "bot.main"]

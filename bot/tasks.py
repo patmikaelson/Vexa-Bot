@@ -10,7 +10,7 @@ os.environ.setdefault("BOT_TOKEN", "")
 os.environ.setdefault("GUILD_ID", "0")
 
 from bot.celery_app import app
-from bot.models import ProductModel, TicketModel, TransactionModel, ReferralModel, EmbedTracker
+from bot.models import ProductModel, TicketModel, TransactionModel, ReferralModel, EmbedTracker, GuildPlanModel, guild_plans_col, AISessionModel, ai_sessions_col
 from bot.embeds import stats_embed, flash_sale_embed, warn, leaderboard_embed, live_demo_embed, bot_log
 from bot.utils import ch_name, get_redis
 
@@ -195,4 +195,116 @@ def rotate_live_demo():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(_run("rotate"))
+    loop.close()
+
+
+async def _check_expired():
+    expired = await GuildPlanModel.get_expired()
+    if not expired:
+        return
+    for plan in expired:
+        guild_id = plan["guild_id"]
+        await guild_plans_col.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"is_active": False}}
+        )
+
+
+async def _send_expiry_warnings():
+    expiring = await GuildPlanModel.get_expiring_soon(3)
+    for plan in expiring:
+        guild_id = plan["guild_id"]
+        end_date = plan.get("end_date")
+        if not end_date:
+            continue
+        plan_type = plan.get("plan_type", "unknown").title()
+        remaining = (end_date - datetime.now(timezone.utc)).days
+        if remaining < 0:
+            continue
+        # Log expiry warning to admin-logs via webhook concept — relies on guild channel
+        embed = discord.Embed(
+            title="⚠️ Premium Expiring Soon",
+            description=f"Your **{plan_type}** plan expires in **{remaining} day(s)**.\n"
+                        f"Renew via `#🎫・create-ticket` to keep your features.",
+            color=0xFFAB00,
+            timestamp=datetime.now(timezone.utc)
+        )
+        embed.set_footer(text="Vexa Premium", icon_url="https://raw.githubusercontent.com/patmikaelson/Vexa-Bot/main/assets/11.png")
+        # Send to admin channel if we can find guild
+        try:
+            intents = discord.Intents.default()
+            intents.members = True
+            client = discord.Client(intents=intents)
+            await client.login(BOT_TOKEN)
+            guild = client.get_guild(guild_id) or await client.fetch_guild(guild_id)
+            if guild:
+                import bot.utils
+                log_ch = discord.utils.get(guild.text_channels, name=bot.utils.ch_name("📊・admin-logs"))
+                if log_ch:
+                    await log_ch.send(embed=embed)
+            await client.close()
+        except:
+            pass
+
+
+@app.task
+def check_expired_plans():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_check_expired())
+    loop.close()
+
+
+@app.task
+def send_expiration_warning():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_send_expiry_warnings())
+    loop.close()
+
+
+async def _cleanup_inactive_ai():
+    inactive = await AISessionModel.get_inactive(168)
+    for session in inactive:
+        channel_id = session["channel_id"]
+        guild_id = session["guild_id"]
+        try:
+            intents = discord.Intents.default()
+            client = discord.Client(intents=intents)
+            await client.login(BOT_TOKEN)
+            guild = client.get_guild(guild_id) or await client.fetch_guild(guild_id)
+            if guild:
+                ch = guild.get_channel(channel_id)
+                if ch:
+                    await ch.send(embed=discord.Embed(
+                        title="⚠️ کانال به زودی بسته می‌شود",
+                        description=(
+                            "این کانال به دلیل عدم فعالیت به مدت ۷ روز به زودی بسته خواهد شد. "
+                            "برای نگهداری آن، یک پیام ارسال کنید."
+                        ),
+                        color=0xFFAB00
+                    ))
+                    await asyncio.sleep(86400)
+                    try:
+                        messages = []
+                        async for m in ch.history(limit=1):
+                            messages.append(m)
+                        if messages:
+                            last = messages[0].created_at.replace(tzinfo=timezone.utc)
+                            if (datetime.now(timezone.utc) - last).total_seconds() < 86400:
+                                continue
+                    except:
+                        pass
+                    await ch.delete(reason="Inactive AI channel cleanup")
+                await ai_sessions_col.delete_one({"channel_id": channel_id})
+            await client.close()
+        except:
+            pass
+
+
+@app.task
+def cleanup_inactive_ai_channels():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_cleanup_inactive_ai())
     loop.close()

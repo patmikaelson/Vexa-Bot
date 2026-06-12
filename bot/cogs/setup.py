@@ -5,7 +5,7 @@ import asyncio
 
 from bot.config import CATEGORIES, ROLES, GUILD_ID, OWNER_ID
 from bot.embeds import success, error, announcement_embed, bot_log
-from bot.models import ProductModel, EmbedTracker, GuildSettings
+from bot.models import ProductModel, EmbedTracker, GuildSettingsManager
 from bot.utils import ch_name
 
 
@@ -89,7 +89,7 @@ class SetupCog(commands.Cog):
                     changes.append(f"Created channel `{cname}`")
                     # Store channel ID in guild_settings
                     key = f"ch_{cname.lower().replace(' ', '_').replace('・', '_')}"
-                    await GuildSettings.set(key, ch.id)
+                    await GuildSettingsManager.set(guild.id, **{key: ch.id})
 
         # Verification gate — restrict non-verified to #✅・verify only
         try:

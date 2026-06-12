@@ -5,8 +5,20 @@ from bot.embeds import bot_log, error
 from bot.models import ProductModel
 from bot.utils import ch_name
 import time
+import aiohttp
+import ssl
 
 intents = discord.Intents.all()
+
+# Custom connector to bypass SNI-based ISP blocking (Iran)
+class _FakeSNI_SSLContext(ssl.SSLContext):
+    def wrap_socket(self, sock, server_side=False, do_handshake_on_connect=True,
+                    suppress_ragged_eofs=True, server_hostname=None, session=None):
+        if server_hostname and ('discord' in server_hostname or 'discordapp' in server_hostname):
+            server_hostname = 'cloudflare.com'
+        return super().wrap_socket(sock, server_side, do_handshake_on_connect,
+                                    suppress_ragged_eofs, server_hostname, session)
+
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 _start_time = time.time()
@@ -148,6 +160,15 @@ async def on_ready():
     except Exception as e:
         print(f"Refresh live demo error: {e}")
 
+    try:
+        if guild:
+            from bot.cogs.info import InfoCog
+            icog = InfoCog(bot)
+            await icog._ensure_info()
+            print("Info panel seeded.")
+    except Exception as e:
+        print(f"Refresh info panel error: {e}")
+
     # Register persistent views
     try:
         await _register_persistent_views()
@@ -192,10 +213,23 @@ async def load():
     await bot.load_extension("bot.cogs.stats")
     await bot.load_extension("bot.cogs.security")
     await bot.load_extension("bot.cogs.voice_support")
+    await bot.load_extension("bot.cogs.info")
+    await bot.load_extension("bot.cogs.economy")
+    await bot.load_extension("bot.cogs.fun_games")
+    await bot.load_extension("bot.cogs.fivem")
+    await bot.load_extension("bot.cogs.utility")
+    await bot.load_extension("bot.cogs.customization")
+    await bot.load_extension("bot.cogs.ai_features")
+    await bot.load_extension("bot.cogs.premium")
+    await bot.load_extension("bot.cogs.ai_chat")
 
 
 async def main():
     await load()
+    ctx = _FakeSNI_SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    bot.http.connector = aiohttp.TCPConnector(ssl=ctx)
     await bot.start(BOT_TOKEN)
 
 

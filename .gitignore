@@ -26,3 +26,11 @@ redis_data/
 node_modules/
 payment-api/node_modules/
 payment-api/package-lock.json
+
+# Test files
+test_*.py
+bot_*.txt
+bot_err.txt
+bot_error.txt
+bot_out.txt
+bot_output.txt

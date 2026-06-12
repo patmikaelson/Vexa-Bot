@@ -16,6 +16,7 @@ DB_NAME = "vexa"
 REDIS_URL = os.getenv("REDIS_URL", "redis://:vexaredis2024@localhost:6379/0")
 PAYMENT_API_URL = os.getenv("PAYMENT_API_URL", "http://payment-api:3001")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 
 VERIFIED_ROLE_ID = 1513662326450950215
 

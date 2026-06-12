@@ -21,5 +21,17 @@ app.conf.update(
             "task": "bot.tasks.rotate_live_demo",
             "schedule": crontab(hour="0,12", minute=0),
         },
+        "check-expired-plans": {
+            "task": "bot.tasks.check_expired_plans",
+            "schedule": crontab(hour="6", minute=0),
+        },
+        "send-expiration-warnings": {
+            "task": "bot.tasks.send_expiration_warning",
+            "schedule": crontab(hour="12", minute=0),
+        },
+        "cleanup-inactive-ai-channels": {
+            "task": "bot.tasks.cleanup_inactive_ai_channels",
+            "schedule": crontab(hour="3", minute=0),
+        },
     },
 )

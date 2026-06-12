@@ -5,9 +5,10 @@ import asyncio
 from datetime import datetime, timezone, timedelta
 
 from bot.config import GUILD_ID
-from bot.models import TicketModel, UserModel, EmbedTracker
+from bot.models import TicketModel, UserModel, EmbedTracker, GuildPlanModel
 from bot.embeds import ticket_panel, ticket_created, ticket_archived, success, error, warn, bot_log
 from bot.utils import ticket_id, set_active_ticket, get_active_ticket, del_active_ticket, ch_name
+from bot.plan_utils import get_max_concurrent_tickets
 
 
 class TicketSelect(ui.Select):
@@ -125,6 +126,12 @@ class TicketCog(commands.Cog):
         if active:
             return await i.response.send_message(
                 embed=error("Active", f"You already have ticket `{active}` open."), ephemeral=True)
+
+        max_tix = await get_max_concurrent_tickets(guild.id)
+        current_open = await TicketModel.count_open_by_guild(guild.id)
+        if current_open >= max_tix:
+            return await i.response.send_message(
+                embed=error("Limit", f"Server max concurrent tickets: {max_tix}. Please wait for a ticket to close."), ephemeral=True)
 
         await i.response.defer(ephemeral=True)
 
